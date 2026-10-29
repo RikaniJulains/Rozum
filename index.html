@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>UniHub × ХУУП AI</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      }
+    });
+
+    // Міст для вибору фото, відео та PDF-розкладу у Flutter Web
+    window.openUniHubFilePicker = function(acceptTypes, targetMode, userId) {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = acceptTypes;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
+      input.onchange = async function(event) {
+        const file = event.target.files[0];
+        document.body.removeChild(input);
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          const base64Data = e.target.result;
+          const endpoint = targetMode === 'schedule_pdf' ? '/api/upload_schedule' : '/api/stage_media';
+          try {
+            await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: userId,
+                file_name: file.name,
+                mime_type: file.type || '',
+                base64: base64Data
+              })
+            });
+          } catch (err) {
+            console.error('Upload error:', err);
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    };
+  </script>
+
+  <link rel="manifest" href="manifest.json">
+</head>
+<body style="background-color: #000000; margin: 0;">
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
